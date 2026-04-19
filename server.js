@@ -97,7 +97,7 @@ app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
 });
 
-server.listen(port, () => {
+server.listen(port, '0.0.0.0', () => {
     console.log('========================================');
     console.log(' ИГРА ЗАПУЩЕНА!');
     console.log(' http://localhost:' + port);
