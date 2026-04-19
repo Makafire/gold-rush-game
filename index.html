@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Gold Rush .io - ХИТ!</title>
+    <meta charset="UTF-8">
+    <link rel="manifest" href="/manifest.json">
+    <style>
+        body { margin: 0; overflow: hidden; background: #1a1a2e; font-family: Arial; }
+        #ui { position: absolute; top: 10px; left: 10px; color: white; background: rgba(0,0,0,0.5); padding: 8px 16px; border-radius: 20px; z-index: 10; }
+        #status { position: absolute; top: 10px; right: 10px; color: gold; background: rgba(0,0,0,0.5); padding: 8px 16px; border-radius: 20px; z-index: 10; }
+        #controls { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); color: white; background: rgba(0,0,0,0.4); padding: 8px 20px; border-radius: 30px; font-size: 14px; z-index: 10; }
+    </style>
+</head>
+<body>
+    <div id="ui">🏆 Очки: <span id="score">0</span></div>
+    <div id="status">🔄 Подключение...</div>
+    <div id="controls">🖱️ Двигайте мышкой | 📱 Касайтесь экрана</div>
+    <canvas id="canvas"></canvas>
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const scoreSpan = document.getElementById('score');
+        const statusDiv = document.getElementById('status');
+        
+        let myId = '';
+        let players = {};
+        let gold = { x: 400, y: 300 };
+        let ws = null;
+        let reconnectTimer = null;
+        
+        function connect() {
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const host = window.location.host;
+            const wsUrl = protocol + '//' + host;
+            
+            console.log('Подключаюсь к: ' + wsUrl);
+            statusDiv.innerHTML = '🔄 Подключение...';
+            
+            ws = new WebSocket(wsUrl);
+            
+            ws.onopen = () => {
+                console.log('Подключен!');
+                statusDiv.innerHTML = '⭐ В ИГРЕ!';
+                if (reconnectTimer) {
+                    clearTimeout(reconnectTimer);
+                    reconnectTimer = null;
+                }
+            };
+            
+            ws.onmessage = (event) => {
+                try {
+                    const data = JSON.parse(event.data);
+                    
+                    if (data.type === 'init') {
+                        myId = data.playerId;
+                        players = data.players;
+                        gold = data.gold;
+                    } else if (data.type === 'playerJoined') {
+                        players[data.player.id] = data.player;
+                    } else if (data.type === 'playerMove') {
+                        if (players[data.playerId]) {
+                            players[data.playerId].x = data.x;
+                            players[data.playerId].y = data.y;
+                        }
+                    } else if (data.type === 'goldUpdate') {
+                        players = data.players;
+                        gold = data.gold;
+                    } else if (data.type === 'playerLeft') {
+                        delete players[data.playerId];
+                    }
+                    
+                    if (players[myId]) {
+                        scoreSpan.innerText = players[myId].score || 0;
+                    }
+                } catch (e) {
+                    console.error('Ошибка:', e);
+                }
+            };
+            
+            ws.onerror = () => {
+                statusDiv.innerHTML = '❌ Ошибка соединения';
+            };
+            
+            ws.onclose = () => {
+                statusDiv.innerHTML = '🔌 Соединение разорвано. Переподключение...';
+                if (!reconnectTimer) {
+                    reconnectTimer = setTimeout(connect, 3000);
+                }
+            };
+        }
+        
+        connect();
+        
+        canvas.addEventListener('mousemove', (e) => {
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({ type: 'move', x: e.clientX, y: e.clientY }));
+            }
+        });
+        
+        canvas.addEventListener('touchmove', (e) => {
+            e.preventDefault();
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({ type: 'move', x: e.touches[0].clientX, y: e.touches[0].clientY }));
+            }
+        });
+        
+        canvas.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({ type: 'move', x: e.touches[0].clientX, y: e.touches[0].clientY }));
+            }
+        });
+        
+        function draw() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            
+            ctx.fillStyle = '#1a1a2e';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            ctx.strokeStyle = '#2a2a4e';
+            ctx.lineWidth = 0.5;
+            for (let i = 0; i < canvas.width; i += 50) {
+                ctx.beginPath();
+                ctx.moveTo(i, 0);
+                ctx.lineTo(i, canvas.height);
+                ctx.stroke();
+            }
+            for (let i = 0; i < canvas.height; i += 50) {
+                ctx.beginPath();
+                ctx.moveTo(0, i);
+                ctx.lineTo(canvas.width, i);
+                ctx.stroke();
+            }
+            
+            if (gold) {
+                ctx.shadowColor = '#FFD700';
+                ctx.shadowBlur = 40;
+                ctx.fillStyle = '#FFD700';
+                ctx.beginPath();
+                ctx.arc(gold.x, gold.y, 25, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.shadowBlur = 0;
+            }
+            
+            Object.keys(players).forEach(id => {
+                const p = players[id];
+                const isMe = (id === myId);
+                
+                ctx.shadowColor = isMe ? '#3498db' : '#e74c3c';
+                ctx.shadowBlur = 25;
+                ctx.fillStyle = isMe ? '#3498db' : '#e74c3c';
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, 18, 0, Math.PI * 2);
+                ctx.fill();
+                
+                ctx.shadowBlur = 0;
+                ctx.fillStyle = 'white';
+                ctx.beginPath();
+                ctx.arc(p.x-5, p.y-5, 5, 0, Math.PI * 2);
+                ctx.fill();
+                
+                ctx.font = 'bold 16px Arial';
+                ctx.fillStyle = 'white';
+                ctx.shadowColor = 'black';
+                ctx.shadowBlur = 5;
+                ctx.textAlign = 'center';
+                ctx.fillText(p.score || 0, p.x, p.y - 30);
+            });
+            
+            ctx.shadowBlur = 0;
+            requestAnimationFrame(draw);
+        }
+        draw();
+    </script>
+</body>
+</html>
