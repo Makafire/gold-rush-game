@@ -1,13 +1,14 @@
 <!DOCTYPE html>
 <html>
 <head>
+    <title>Gold Rush .io - ХИТ!</title>
     <meta charset="UTF-8">
-    <title>Gold Rush .io</title>
     <link rel="manifest" href="/manifest.json">
     <style>
         body { margin: 0; overflow: hidden; background: #1a1a2e; font-family: Arial; }
         #ui { position: absolute; top: 10px; left: 10px; color: white; background: rgba(0,0,0,0.5); padding: 8px 16px; border-radius: 20px; z-index: 10; }
         #status { position: absolute; top: 10px; right: 10px; color: gold; background: rgba(0,0,0,0.5); padding: 8px 16px; border-radius: 20px; z-index: 10; }
+        #controls { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); color: white; background: rgba(0,0,0,0.4); padding: 8px 20px; border-radius: 30px; font-size: 14px; z-index: 10; }
         #offline-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #1a1a2e; z-index: 9999; color: white; text-align: center; padding-top: 30%; font-family: Arial; }
         #offline-overlay h2 { font-size: 24px; margin: 20px 0 10px; }
         #offline-overlay p { color: #aaa; margin-bottom: 30px; }
@@ -17,6 +18,7 @@
 <body>
     <div id="ui">🏆 Очки: <span id="score">0</span></div>
     <div id="status">🔄 Подключение...</div>
+    <div id="controls">🖱️ Двигайте мышкой | 📱 Касайтесь экрана</div>
     <canvas id="canvas"></canvas>
 
     <div id="offline-overlay">
@@ -24,6 +26,7 @@
         <h2>Нет подключения к интернету</h2>
         <p>Проверьте соединение и попробуйте снова</p>
         <button onclick="window.location.reload()">🔄 Обновить</button>
+        <p style="margin-top: 40px; color: #FFD700; font-size: 14px;">Gold Rush .io</p>
     </div>
 
     <script>
@@ -38,7 +41,6 @@
         var ws = null;
         var reconnectTimer = null;
 
-        // ЗАГЛУШКА ПРИ ПОТЕРЕ ИНТЕРНЕТА
         function updateOnlineStatus() {
             if (navigator.onLine) {
                 offlineOverlay.style.display = 'none';
