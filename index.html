@@ -16,11 +16,22 @@
     <div id="status">🔄 Подключение...</div>
     <div id="controls">🖱️ Двигайте мышкой | 📱 Касайтесь экрана</div>
     <canvas id="canvas"></canvas>
+
+    <!-- ЗАГЛУШКА ПРИ ОТСУТСТВИИ ИНТЕРНЕТА -->
+    <div id="offline-overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #1a1a2e; z-index: 9999; font-family: Arial, sans-serif; color: white; text-align: center; padding-top: 30%;">
+        <div style="font-size: 80px; margin-bottom: 20px;">📡</div>
+        <h2 style="margin-bottom: 10px; font-size: 24px;">Нет подключения к интернету</h2>
+        <p style="color: #aaa; margin-bottom: 30px; font-size: 16px;">Проверьте соединение и попробуйте снова</p>
+        <button onclick="window.location.reload()" style="background: #3498db; color: white; border: none; padding: 14px 32px; border-radius: 30px; font-size: 18px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 10px rgba(52, 152, 219, 0.3);">🔄 Обновить</button>
+        <p style="margin-top: 40px; color: #FFD700; font-size: 14px;">Gold Rush .io</p>
+    </div>
+
     <script>
         const canvas = document.getElementById('canvas');
         const ctx = canvas.getContext('2d');
         const scoreSpan = document.getElementById('score');
         const statusDiv = document.getElementById('status');
+        const offlineOverlay = document.getElementById('offline-overlay');
         
         let myId = '';
         let players = {};
@@ -28,6 +39,22 @@
         let ws = null;
         let reconnectTimer = null;
         
+        // Функция обновления статуса интернета
+        function updateOnlineStatus() {
+            if (navigator.onLine) {
+                offlineOverlay.style.display = 'none';
+                canvas.style.display = 'block';
+            } else {
+                offlineOverlay.style.display = 'block';
+                canvas.style.display = 'none';
+            }
+        }
+        
+        window.addEventListener('online', updateOnlineStatus);
+        window.addEventListener('offline', updateOnlineStatus);
+        updateOnlineStatus();
+        
+        // Функция подключения к серверу
         function connect() {
             const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
             const host = window.location.host;
