@@ -5,7 +5,15 @@
     <meta charset="UTF-8">
     <link rel="manifest" href="/manifest.json">
     <style>
-        body { margin: 0; overflow: hidden; background: #1a1a2e; font-family: Arial; }
+        /* ОТКЛЮЧАЕМ PULL-TO-REFRESH */
+        body {
+            margin: 0;
+            overflow: hidden;
+            background: #1a1a2e;
+            font-family: Arial;
+            overscroll-behavior: none;
+            overscroll-behavior-y: none;
+        }
         #ui { position: absolute; top: 10px; left: 10px; color: white; background: rgba(0,0,0,0.5); padding: 8px 16px; border-radius: 20px; z-index: 10; }
         #status { position: absolute; top: 10px; right: 10px; color: gold; background: rgba(0,0,0,0.5); padding: 8px 16px; border-radius: 20px; z-index: 10; }
         #controls { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); color: white; background: rgba(0,0,0,0.4); padding: 8px 20px; border-radius: 30px; font-size: 14px; z-index: 10; }
@@ -41,6 +49,7 @@
         var ws = null;
         var reconnectTimer = null;
 
+        // ЗАГЛУШКА ПРИ ПОТЕРЕ ИНТЕРНЕТА
         function updateOnlineStatus() {
             if (navigator.onLine) {
                 offlineOverlay.style.display = 'none';
