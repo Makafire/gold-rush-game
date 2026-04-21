@@ -3,16 +3,26 @@
 <head>
     <title>Gold Rush .io - ХИТ!</title>
     <meta charset="UTF-8">
+    <!-- Фиксируем масштаб и ориентацию -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <link rel="manifest" href="/manifest.json">
     <style>
-        /* ОТКЛЮЧАЕМ PULL-TO-REFRESH */
         body {
             margin: 0;
             overflow: hidden;
             background: #1a1a2e;
             font-family: Arial;
+            /* Отключаем Pull-to-Refresh */
             overscroll-behavior: none;
             overscroll-behavior-y: none;
+        }
+        #game-container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
         #ui { position: absolute; top: 10px; left: 10px; color: white; background: rgba(0,0,0,0.5); padding: 8px 16px; border-radius: 20px; z-index: 10; }
         #status { position: absolute; top: 10px; right: 10px; color: gold; background: rgba(0,0,0,0.5); padding: 8px 16px; border-radius: 20px; z-index: 10; }
@@ -24,10 +34,12 @@
     </style>
 </head>
 <body>
+    <div id="game-container">
+        <canvas id="canvas"></canvas>
+    </div>
     <div id="ui">🏆 Очки: <span id="score">0</span></div>
     <div id="status">🔄 Подключение...</div>
     <div id="controls">🖱️ Двигайте мышкой | 📱 Касайтесь экрана</div>
-    <canvas id="canvas"></canvas>
 
     <div id="offline-overlay">
         <div style="font-size: 80px;">📡</div>
@@ -62,6 +74,13 @@
         window.addEventListener('online', updateOnlineStatus);
         window.addEventListener('offline', updateOnlineStatus);
         updateOnlineStatus();
+
+        // Функция для перерисовки при изменении размера окна
+        function handleResize() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            draw();
+        }
 
         function connect() {
             var protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
@@ -107,8 +126,7 @@
         });
 
         function draw() {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
+            // Размеры canvas уже установлены в handleResize
             ctx.fillStyle = '#1a1a2e';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
             ctx.strokeStyle = '#2a2a4e';
@@ -133,6 +151,10 @@
             ctx.shadowBlur = 0;
             requestAnimationFrame(draw);
         }
+        
+        // Инициализация размера и отрисовка
+        handleResize();
+        window.addEventListener('resize', handleResize);
         draw();
     </script>
 </body>
